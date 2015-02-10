@@ -1,5 +1,5 @@
 {
-    "name": "xstream/flysystem",
+    "name": "league/flysystem",
     "description": "Many filesystems, one API.",
     "keywords": [
         "filesystem", "files", "storage", "dropbox", "aws",
