@@ -315,7 +315,7 @@ class MountManager
         switch ($uri->getScheme()) {
             case '':
             case 'file':
-                return 'file';
+                return 'file://';
 
             case 'ftp':
             case 'sftp':
