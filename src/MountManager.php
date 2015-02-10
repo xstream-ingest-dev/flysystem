@@ -191,11 +191,28 @@ class MountManager
      * @param string $directory
      * @param bool   $recursive
      *
-     * @return array
+     * @return array [
+     *  'path' => string,
+     *  'size' => int,
+     *  'timestamp' => int,
+     *  'type' => 'file|dir',
+     *  'visibility' => 'private|public',
+     *  'dirname' => string,
+     *  'basename' => string,
+     *  'extension' => string,
+     *  'filename' => string,
+     *  'filesystem' => string
+     *  ]
      */
     public function listContents($directory = '', $recursive = false)
     {
-        list($prefix, $arguments) = $this->filterPrefix([$directory]);
+        if ($this->automount) {
+            $prefix = $this->automountFilesystem($directory);
+            $arguments = [(new Uri($directory))->getPath()];
+        } else {
+            list($prefix, $arguments) = $this->filterPrefix([$directory]);
+        }
+
         $filesystem = $this->getFilesystem($prefix);
         $directory = array_shift($arguments);
         $result = $filesystem->listContents($directory, $recursive);

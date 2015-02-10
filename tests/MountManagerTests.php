@@ -211,15 +211,16 @@ class MountManagerTests extends PHPUnit_Framework_TestCase
     public function dataProviderTestCopy()
     {
         $data = [
-              ['file://' . __DIR__ . '/../changelog.md', 'file://' . __DIR__ . '/files/changelog.md'],
+              ['file://' . __DIR__ . '/../changelog.md', 'file://' . __DIR__ . '/files/'],
         ];
 
         if ($_ENV['ftp.enable_tests'] == 1) {
-            $data[] = ['file://' . __DIR__ . '/../changelog.md', $_ENV['ftp.uri'] . '/changelog.md'];
+            $data[] = ['file://' . __DIR__ . '/../changelog.md', $_ENV['ftp.uri']];
         }
 
         if ($_ENV['sftp.enable_tests'] == 1) {
-            $data[] = ['file://' . __DIR__ . '/../changelog.md', $_ENV['sftp.uri'] . '/changelog.md'];
+            $data[] = ['file://' . __DIR__ . '/../changelog.md', $_ENV['sftp.uri']];
+            $data[] = ['file:///home/damian/trash/sd.tar', $_ENV['sftp.uri']];
         }
 
         return $data;
@@ -255,5 +256,44 @@ class MountManagerTests extends PHPUnit_Framework_TestCase
                 $mountManager->delete($iTargetPath);
             }
         }
+    }
+
+    public function dataProviderListContent()
+    {
+        $data = [
+            ['file://' . __DIR__, 'MountManagerTests.php'],
+        ];
+
+        if ($_ENV['ftp.enable_tests'] == 1) {
+            $data[] = ['file://' . __DIR__ . '/../changelog.md', $_ENV['ftp.uri'] . '/changelog.md'];
+        }
+
+        if ($_ENV['sftp.enable_tests'] == 1) {
+            $data[] = [$_ENV['sftp.uri'], 'changelog.md'];
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param string $path
+     * @param array $expectedContent
+     * @ depends testCopy
+     * @dataProvider dataProviderListContent
+     */
+    public function testListContent($path, $expectedContent)
+    {
+        $mountManager = (new MountManager())->setAutomount(true);
+
+        $contents = $mountManager->listContents($path);
+        foreach ($contents as $content) {
+            if ($content['type'] === 'file' && $content['basename'] === $expectedContent) {
+                $this->assertEquals($content['basename'], $expectedContent);
+
+                return;
+            }
+        }
+
+        $this->fail('Did not find expected content ' . $expectedContent);
     }
 }
