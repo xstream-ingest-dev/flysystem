@@ -135,7 +135,7 @@ function ftp_mkdir($connection, $dirname)
         return false;
     }
 
-    return true;
+    return $dirname;
 }
 
 function ftp_fput($connection, $path)
@@ -161,6 +161,10 @@ function ftp_fget($connection, $resource, $path)
 
 function ftp_nlist($connection, $directory)
 {
+    if ($connection == 'failWhenListing') {
+        return false;
+    }
+
     return ['./some.nested'];
 }
 
@@ -187,6 +191,29 @@ class FtpTests extends \PHPUnit_Framework_TestCase
         'username' => 'user',
         'password' => 'password',
     ];
+
+    public function testCreatingDirectoryWithListingError()
+    {
+        $adapter = $this->getMockBuilder('\League\Flysystem\Adapter\Ftp')
+            ->disableOriginalConstructor()
+            ->setMethods(['getConnection'])
+            ->getMock();
+        $adapter
+            ->expects($this->any())
+            ->method('getConnection')
+            ->willReturn('failWhenListing');
+
+        $created = $adapter->createDir('any-directory', new Config());
+        $this->assertFalse($created);
+    }
+
+    public function testCreatingDirectoryNamed0DoesNotReturnFalse()
+    {
+        $adapter = new Ftp($this->options);
+        $created = $adapter->createDir('0', new Config());
+        $expectedResult = ['path' => '0'];
+        $this->assertEquals($expectedResult, $created);
+    }
 
     public function testInstantiable()
     {

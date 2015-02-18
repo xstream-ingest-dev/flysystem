@@ -289,6 +289,10 @@ class Ftp extends AbstractFtpAdapter
         // List the current directory
         $listing = ftp_nlist($connection, '.');
 
+        if ($listing === false) {
+            return false;
+        }
+
         $listing = array_map(function ($item) {
             return ltrim($item, './');
         }, $listing);
@@ -297,7 +301,7 @@ class Ftp extends AbstractFtpAdapter
             return true;
         }
 
-        return (boolean) ftp_mkdir($connection, $directory);
+        return ftp_mkdir($connection, $directory) !== false;
     }
 
     /**
