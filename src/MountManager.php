@@ -370,7 +370,8 @@ class MountManager
                         'username' => explode(':', $uri->getUserInfo())[0],
                         'password' => explode(':', $uri->getUserInfo())[1],
                         'port' => $uri->getPort(),
-                        'root' => $filesystemRoot
+                        'root' => $filesystemRoot,
+                        'passive' => true
                     ]);
                     break;
 
