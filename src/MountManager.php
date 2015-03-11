@@ -64,6 +64,13 @@ class MountManager
     protected $automount = false;
 
     /**
+     * @var array
+     */
+    protected $automountDefaults = [
+        'ftp' => ['passive' => false]
+    ];
+
+    /**
      * Constructor.
      *
      * @param array $filesystems [string $filesystemPrefix => FilesystemInterface]
@@ -345,6 +352,19 @@ class MountManager
     }
 
     /**
+     * @param array $defaults Default options used when creating adapters when "automount" option is enabled
+     *  bool [ftp][passive]
+     */
+    public function setAutomountDefaults(array $defaults)
+    {
+        if (! isset($defaults['ftp']['passive'])) {
+            throw new \InvalidArgumentException('"[ftp][passive]" option not specified');
+        }
+
+        $this->automountDefaults = $defaults;
+    }
+
+    /**
      * @param Uri $uriString
      * @return string mounted filesystem prefix
      */
@@ -371,7 +391,7 @@ class MountManager
                         'password' => explode(':', $uri->getUserInfo())[1],
                         'port' => $uri->getPort(),
                         'root' => $filesystemRoot,
-                        'passive' => true
+                        'passive' => $this->automountDefaults['ftp']['passive']
                     ]);
                     break;
 
