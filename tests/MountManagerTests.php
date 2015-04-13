@@ -1,7 +1,11 @@
 <?php
 
+use League\Flysystem\Adapter\Ftp;
+use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use League\Flysystem\MountManager;
+use League\Flysystem\Plugin\DoNothing;
+use League\Flysystem\Sftp\SftpAdapter;
 use Phly\Http\Uri;
 
 class MountManagerTests extends PHPUnit_Framework_TestCase
@@ -295,5 +299,59 @@ class MountManagerTests extends PHPUnit_Framework_TestCase
         }
 
         $this->fail('Did not find expected content ' . $expectedContent);
+    }
+
+    /**
+     * @param string $uri
+     * @param FileSystem $expectedFilesystem
+     *
+     * @dataProvider filesystemAndUriProvider
+     */
+    public function testAutomounting($uri, $expectedFilesystem)
+    {
+        $mountManager = new MountManager();
+        $mountManager->setAutomount(true);
+        $mountManager->addPlugin(new DoNothing());
+        $mountManager->doNothing($uri);
+        $foundFilesystem = $mountManager->getFilesystem($uri);
+        $this->assertEquals($expectedFilesystem, $foundFilesystem);
+    }
+
+    public function filesystemAndUriProvider()
+    {
+        $ftpConfig = [
+            'host' => 'ftp.example.com',
+            'username' => 'user',
+            'password' => 'pass',
+            'port' => 21,
+            'root' => '/',
+        ];
+
+        $sftpConfig = [
+            'host' => 'machine.example.com',
+            'username' => 'user',
+            'password' => 'pass',
+            'port' => 22,
+            'root' => '/'
+        ];
+
+        return [
+            ['/tmp/some-file', new Filesystem(new Local('/'))],
+            ['/tmp/some-file', new Filesystem(new Local('/'))],
+            ['ftp://user:pass@ftp.example.com', new Filesystem(new Ftp($ftpConfig))],
+            ['sftp://user:pass@machine.example.com', new Filesystem(new SftpAdapter($sftpConfig))],
+        ];
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testAutomountingWithNotSupportedUriScheme()
+    {
+        $this->markTestSkipped('Expected to work after refactoring.');
+        $mountManager = new MountManager();
+        $mountManager->setAutomount(true);
+        $mountManager->addPlugin(new DoNothing());
+        $mountManager->doNothing('some-fake-scheme://some/uri');
     }
 }
